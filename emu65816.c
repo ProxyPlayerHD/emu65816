@@ -48,7 +48,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 	int32_t cycleRem = cycles;
 	uint8_t opcode;
 	bool _pre_debug = DBG;
-	cint32_t tmp0, tmp1, tmp2;
+	cint32_t tmp0, tmp1, tmp2, tmp3;
 	
 	// If a STP instruction was executed, exit immediately
 	if (CPU->stp) return 0;
@@ -176,14 +176,14 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// Absolute Long
 		case OP_JSL_AL:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			tmp0.bm = fetch(CPU);
 			setE(false);			// Then Clear it
 			pushStack(CPU, PB);
 			pushStack(CPU, PC.bh);
 			pushStack(CPU, PC.bl);			// Push the PC before fetching the 3rd Operand
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			tmp0.bh = fetch(CPU);
 			PC.w = tmp0.wl;
 			PB = tmp0.bh;
@@ -201,13 +201,13 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// From Long Subroutine
 		case OP_RTL:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			tmp0.bl = pullStack(CPU);
 			tmp0.bm = pullStack(CPU);
 			PC.w = tmp0.wl + 1;
 			PB = pullStack(CPU);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			dbg_printf("RTL (Target: $%02X%04X)", PB, PC.w);
 		break;
 		
@@ -325,32 +325,32 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		// 16 bit Pushes
 		// Immediate
 		case OP_PEA_IM:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			tmp0.bm = fetch(CPU);
 			setE(false);			// Then Clear it
 			pushStack(CPU, tmp0.bm);
 			pushStack(CPU, tmp0.bl);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			dbg_printf("PEA #$%04X", tmp0.wl);
 		break;
 		
 		// Direct Page
 		case OP_PEI_DP:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			tmp1.bl = readDP(CPU, tmp0.bl);
 			tmp1.bm = readDP(CPU, tmp0.bl + 1);
 			setE(false);			// Then Clear it
 			pushStack(CPU, tmp1.bm);
 			pushStack(CPU, tmp1.bl);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			dbg_printf("PEI $%02X (Target: $%06X, Value: $%04X)", tmp0.bl, addrDP(CPU, tmp0.bl), tmp1.wl);
 		break;
 		
 		// Immediate
 		case OP_PER_IM:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			tmp0.bm = fetch(CPU);
 			tmp1.wl = tmp0.wl;
@@ -358,7 +358,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 			setE(false);			// Then Clear it
 			pushStack(CPU, tmp1.bm);
 			pushStack(CPU, tmp1.bl);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			dbg_printf("PER #$%04X (Value: $%04X)", tmp0.wl, tmp1.wl);
 		break;
 		
@@ -369,11 +369,11 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		break;
 		
 		case OP_PHD:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			pushStack(CPU, DP.bh);
 			pushStack(CPU, DP.bl);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			dbg_printf("PHD (Target: $%06X, Value: $%02X)", addrStack(CPU, -1), DP.w);
 		break;
 		
@@ -433,11 +433,11 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		break;
 		
 		case OP_PLD:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			DP.bl = pullStack(CPU);
 			DP.bh = pullStack(CPU);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			setNZ(CPU, false, DP.w);
 			dbg_printf("PLD (Target: $%06X, Value: $%02X)", addrStack(CPU, -1), DP.w);
 		break;
@@ -695,12 +695,12 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// Stack
 		case OP_LDA_S:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			setE(false);			// Then Clear it
 			A.bl = readStack(CPU, tmp0.bl);
 			if (!MF) A.bh = readStack(CPU, tmp0.bl + 1);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			setNZ(CPU, MF, A.w);
 			
 			if (MF){
@@ -712,12 +712,12 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// Stack Indirect Y
 		case OP_LDA_SIY:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			setE(false);			// Then Clear it
 			tmp1.bl = readStack(CPU, tmp0.bl);
 			tmp1.bm = readStack(CPU, tmp0.bl + 1);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			A.bl = readAbs(CPU, tmp1.wl + Y.w);
 			if (!MF) A.bh = readAbs(CPU, tmp1.wl + Y.w + 1);
 			setNZ(CPU, MF, A.w);
@@ -912,12 +912,12 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// Stack
 		case OP_STA_S:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			tmp0.bl = fetch(CPU);
 			writeStack(CPU, tmp0.bl, A.bl);
 			if (!MF) writeStack(CPU, tmp0.bl + 1, A.bh);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			
 			if (MF){
 				dbg_printf("STA %u,S (Target: $%06X, Value: $%02X)", tmp0.bl, addrStack(CPU, tmp0.bl), A.bl);
@@ -928,12 +928,12 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		
 		// Stack Indirect Y
 		case OP_STA_SIY:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			tmp0.bl = fetch(CPU);
 			setE(false);			// Then Clear it
 			tmp1.bl = readStack(CPU, tmp0.bl);
 			tmp1.bm = readStack(CPU, tmp0.bl + 1);
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			writeAbs(CPU, tmp1.wl + Y.w, A.bl);
 			if (!MF) writeAbs(CPU, tmp1.wl + Y.w + 1, A.bh);
 			
@@ -2058,7 +2058,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		case OP_ORA_S:
 		case OP_XOR_S:
 		case OP_CMP_S:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			if (MF){
 				tmp0.bl = fetch(CPU);
@@ -2073,7 +2073,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 				
 				dbg_printf("%s %u,S (Target: $%06X, Value: $%04X, A = $%04X)", g1ALUNames[aaa(opcode)], tmp0.bl, addrStack(CPU, tmp0.bl), tmp1.wl, A.w);
 			}
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			g1ALU(CPU, tmp1.wl, aaa(opcode));
 		break;
 		
@@ -2084,7 +2084,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 		case OP_ORA_SIY:
 		case OP_XOR_SIY:
 		case OP_CMP_SIY:
-			tmp2.bl = EF;			// Save the E Flag
+			tmp3.bl = EF;			// Save the E Flag
 			setE(false);			// Then Clear it
 			if (MF){
 				tmp0.bl = fetch(CPU);
@@ -2103,7 +2103,7 @@ int32_t cpuExecute(cpuState* CPU, int32_t cycles){
 				
 				dbg_printf("%s (%u,S),Y (Target: $%06X, Value: $%04X, A = $%04X)", g1ALUNames[aaa(opcode)], tmp0.bl, addrAbs(CPU, tmp1.bl + Y.w), tmp2.wl, A.w);
 			}
-			setE(tmp2.bl);		// And afterwards restore it again
+			setE(tmp3.bl);		// And afterwards restore it again
 			g1ALU(CPU, tmp2.wl, aaa(opcode));
 		break;
 		
