@@ -173,9 +173,9 @@ while(chkSTP(CPU)){
 
 And that's basically it!
 
+# Other stuff
 
-
-
+the `main.c` file is another example of a simple 65816 Emulator, though it has some extra features like File IO and a timer that can both be accessed from the emulated CPU. useful for loading programs at runtime and keeping track of time (relative to the emulated speed)
 
 
 
